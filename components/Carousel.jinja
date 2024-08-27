@@ -1,0 +1,12 @@
+{#def imgs #}
+
+
+<div class="flex flex-row overflow-x-auto">
+    {% for img in imgs %}
+        <img
+            src="{{ img }}"
+            alt="Past Event"
+            class="w-1/4 h-auto"
+        />
+    {% endfor %}
+</div>

@@ -11,23 +11,20 @@ from flask import (
     abort,
     flash,
     redirect,
-    request,
     render_template,
+    request,
     url_for,
     g,
     session,
 )
 from flask_htmx import HTMX
-from dotenv import load_dotenv
-import sqlite3
-from models.admin_users import AdminUsers
-from models.event import Event
-from models.gallery import Gallery
-from models.rating import Rating
+
+from models.models import Event, Gallery, Role, User, Vote, Feedback
 from datetime import timedelta
-from flask_sqlalchemy import SQLAlchemy
-from utils import Base
+from dotenv import load_dotenv
 import random
+from db import DATABASE_URL, db
+from jinjax import Catalog
 
 # if not load_dotenv(os.path.join(os.getcwd(), ".env")):
 #     print("No .env file found")
@@ -36,28 +33,78 @@ load_dotenv()
 
 app = Flask(__name__)
 htmx = HTMX(app)
-DB_PATH = "data.db"
-BASE_PATH = os.path.join("static", "imgs")
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
-
-sqlalchemy_db = SQLAlchemy(app)
-ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
-
+COMPONENTS_DIR = "components"
+TEMPLATES_DIR = "templates"
+STATIC_DIR = "static"
+catalog = Catalog(jinja_env=app.jinja_env)
+catalog.add_folder(COMPONENTS_DIR)
+catalog.add_folder(TEMPLATES_DIR)
+app.jinja_env.globals["catalog"] = catalog
+app.wsgi_app = catalog.get_middleware(
+    app.wsgi_app,
+    autorefresh=app.debug,
+)
 
 # Flask admin setup
 admin = Admin(app, name="The Royal Highlanders", template_mode="bootstrap4")
 
 
+def check_all_leadership_roles(names):
+    if (
+        "ra" in names
+        or "president" in names
+        or "vice_president" in names
+        or "treasurer" in names
+        or "secretary" in names
+        or "grand_prix_rep" in names
+        or "resident_satisfaction_committee_head" in names
+        or "purchasing_committee_head" in names
+        or "event_committee_head" in names
+        or "hall_club_representation_committee_head" in names
+    ):
+        return True
+    return False
+
+
+def initialize_db():
+    db.create_all()
+    Role.create(name="ra", is_electable=False)
+    Role.create(name="president", is_electable=True)
+    Role.create(name="vice_president", is_electable=True)
+    Role.create(name="treasurer", is_electable=True)
+    Role.create(name="secretary", is_electable=True)
+    Role.create(name="grand_prix_rep", is_electable=True)
+    Role.create(name="resident_satisfaction_committee_head", is_electable=True)
+    Role.create(name="purchasing_committee_head", is_electable=True)
+    Role.create(name="event_committee_head", is_electable=True)
+    Role.create(name="hall_club_representation_committee_head", is_electable=True)
+    Role.create(name="resident_satisfaction_committee", is_electable=False)
+    Role.create(name="purchasing_committee", is_electable=False)
+    Role.create(name="event_committee", is_electable=False)
+    Role.create(name="hall_club_representation_committee", is_electable=False)
+    Role.create(name="member", is_electable=False)
+
+
 class EventView(ModelView):
     def is_accessible(self):
-        admin_username = sqlalchemy_db.session.query(AdminUsers.username).first()[0]
-        admin_password = sqlalchemy_db.session.query(AdminUsers.password).first()[0]
+        user = (
+            User.query()
+            .filter(email=session.get("email"), password=session.get("password"))
+            .first()
+        )
+        if user is None:
+            return False
+        user = user[0]
+        names = [role.name for role in user.roles]
         if (
-            session.get("username") == admin_username
-            and session.get("password") == admin_password
+            "ra" in names
+            or "president" in names
+            or "event_committee_head" in names
+            or "secretary" in names
+            or "vice_president" in names
         ):
             return True
         return False
@@ -69,7 +116,7 @@ class EventView(ModelView):
     form_extra_fields = {
         "img": FileUploadField(
             "Image",
-            base_path=BASE_PATH,
+            base_path=os.path.join(STATIC_DIR, "uploads", "images"),
             allowed_extensions=["png", "jpg", "jpeg", "webp"],
         ),
     }
@@ -77,59 +124,49 @@ class EventView(ModelView):
 
 class GalleryView(ModelView):
     def is_accessible(self):
-        admin_username = sqlalchemy_db.session.query(AdminUsers.username).first()[0]
-        admin_password = sqlalchemy_db.session.query(AdminUsers.password).first()[0]
-        if (
-            session.get("username") == admin_username
-            and session.get("password") == admin_password
-        ):
+        user = (
+            User.query()
+            .filter(email=session.get("email"), password=session.get("password"))
+            .first()
+        )
+        if user is None:
+            return False
+        user = user[0]
+        names = [role.name for role in user.roles]
+        if check_all_leadership_roles(names):
             return True
         return False
 
     @property
     def column_list(self):
-        return ["id", "event_id"] + self.scaffold_list_columns()
+        return ["id"] + self.scaffold_list_columns()
 
-    with app.app_context():
-        form_extra_fields = {
-            "img": FileUploadField(
-                "Image",
-                base_path=BASE_PATH,
-                allowed_extensions=["png", "jpg", "jpeg", "webp"],
-            ),
-            "event_id": Select2Field(
-                "Event",
-                choices=[
-                    (event.id, event.title)
-                    for event in sqlalchemy_db.session.query(Event).all()
-                ],
-            ),
-        }
+    form_extra_fields = {
+        "img": FileUploadField(
+            "Image",
+            base_path=os.path.join(STATIC_DIR, "uploads", "images"),
+            allowed_extensions=["png", "jpg", "jpeg", "webp"],
+        ),
+    }
 
 
-class RatingView(ModelView):
+class FeedbackView(ModelView):
     def is_accessible(self):
-        admin_username = sqlalchemy_db.session.query(AdminUsers.username).first()[0]
-        admin_password = sqlalchemy_db.session.query(AdminUsers.password).first()[0]
+        user = (
+            User.query()
+            .filter(email=session.get("email"), password=session.get("password"))
+            .first()
+        )
+        if user is None:
+            return False
+        user = user[0]
+        names = [role.name for role in user.roles]
         if (
-            session.get("username") == admin_username
-            and session.get("password") == admin_password
-        ):
-            return True
-        return False
-
-    @property
-    def column_list(self):
-        return ["id", "event_id"] + self.scaffold_list_columns()
-
-
-class AdminUsersView(ModelView):
-    def is_accessible(self):
-        admin_username = sqlalchemy_db.session.query(AdminUsers.username).first()[0]
-        admin_password = sqlalchemy_db.session.query(AdminUsers.password).first()[0]
-        if (
-            session.get("username") == admin_username
-            and session.get("password") == admin_password
+            "ra" in names
+            or "president" in names
+            or "vice_president" in names
+            or "secretary" in names
+            or "resident_satisfaction_committee_head" in names
         ):
             return True
         return False
@@ -139,48 +176,93 @@ class AdminUsersView(ModelView):
         return ["id"] + self.scaffold_list_columns()
 
 
+class RoleView(ModelView):
+    def is_accessible(self):
+        user = (
+            User.query()
+            .filter(email=session.get("email"), password=session.get("password"))
+            .first()
+        )
+        if user is None:
+            return False
+        user = user[0]
+        names = [role.name for role in user.roles]
+        if "ra" in names or "president" in names or "secretary" in names:
+            return True
+        return False
+
+    @property
+    def column_list(self):
+        return ["id"] + self.scaffold_list_columns()
+
+
+class UserView(ModelView):
+    def is_accessible(self):
+        user = (
+            User.query()
+            .filter(email=session.get("email"), password=session.get("password"))
+            .first()
+        )
+        if user is None:
+            return False
+        user = user[0]
+        names = [role.name for role in user.roles]
+        if (
+            "ra" in names
+            or "president" in names
+            or "resident_satisfaction_committee_head" in names
+            or "secretary" in names
+            or "vice_president" in names
+        ):
+            return True
+        return False
+
+    @property
+    def column_list(self):
+        return ["id"] + self.scaffold_list_columns()
+
+
+class VoteView(ModelView):
+    def is_accessible(self):
+        user = (
+            User.query()
+            .filter(email=session.get("email"), password=session.get("password"))
+            .first()
+        )
+        if user is None:
+            return False
+        user = user[0]
+        names = [role.name for role in user.roles]
+        if "ra" in names:
+            return True
+        return False
+
+    @property
+    def column_list(self):
+        return ["id"] + self.scaffold_list_columns()
+
+
 with app.app_context():
-    # Configure the sqlite3 db
-    # Create the events table if it doesn't exist
-    # cur.execute(
-    #     "CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY, title TEXT, description TEXT, img BLOB, suggested BOOLEAN, rating INTEGER)"
-    # )
-    # cur.execute(
-    #     "CREATE TABLE IF NOT EXISTS gallery (id INTEGER PRIMARY KEY, img BLOB, event INTEGER, FOREIGN KEY(event) REFERENCES events(id))"
-    # )
-    # cur.execute(
-    #     "CREATE TABLE IF NOT EXISTS ratings (id INTEGER PRIMARY KEY, username TEXT, score INTEGER, event INTEGER, FOREIGN KEY(event) REFERENCES events(id))"
-    # )
-    # cur.execute(
-    #     "CREATE TABLE IF NOT EXISTS admins (id INTEGER PRIMARY KEY, username TEXT, password TEXT)"
-    # )
-    # Create the tables if they don't exist
-    Base.metadata.create_all(sqlalchemy_db.engine)
-    # Create the admin user if it doesn't exist
-    if not sqlalchemy_db.session.query(AdminUsers).first():
-        admin_user = AdminUsers(username=ADMIN_USERNAME, password=ADMIN_PASSWORD)
-        sqlalchemy_db.session.add(admin_user)
-        sqlalchemy_db.session.commit()
-    admin.add_view(EventView(Event, sqlalchemy_db.session))
-    # Generic model view for genres, forms, and artists
-    admin.add_view(GalleryView(Gallery, sqlalchemy_db.session))
-    admin.add_view(RatingView(Rating, sqlalchemy_db.session))
-    admin.add_view(AdminUsersView(AdminUsers, sqlalchemy_db.session))
+    admin.add_view(EventView(Event, db.session))
+    admin.add_view(GalleryView(Gallery, db.session))
+    admin.add_view(FeedbackView(Feedback, db.session))
+    admin.add_view(RoleView(Role, db.session))
+    admin.add_view(UserView(User, db.session))
+    admin.add_view(VoteView(Vote, db.session))
 
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     counter = 0
     if request.method == "POST":
-        username = request.form["username"]
+        email = request.form["email"]
         password = request.form["password"]
-        admin_username = sqlalchemy_db.session.query(AdminUsers.username).first()[0]
-        print(admin_username)
-        admin_password = sqlalchemy_db.session.query(AdminUsers.password).first()[0]
-        print(admin_password)
+        user = User.query.filter(email=email, password=password).first()
 
-        if username == admin_username and password == admin_password:
-            session["username"] = username
+        names = [role.name for role in user.roles]
+
+        if check_all_leadership_roles(names):
+            session["email"] = email
             session["password"] = password
             print("Redirecting to admin")
             return redirect("/admin")
@@ -188,14 +270,14 @@ def admin_login():
             counter += 1
             if counter == 3:
                 return redirect("/")
-            return render_template("admin_login.html")
+            return catalog.render("admin_login")
     elif request.method == "GET":
-        return render_template("admin_login.html")
+        return catalog.render("admin_login")
 
 
 @app.route("/admin/logout", methods=["GET", "POST"])
 def admin_logout():
-    session.pop("username", None)
+    session.pop("email", None)
     session.pop("password", None)
     return redirect("/")
 
@@ -204,8 +286,6 @@ def admin_logout():
 @app.before_request
 def make_session_permanent():
     session.permanent = True
-    # Make the session last for a year
-    app.permanent_session_lifetime = timedelta(days=365)
 
 
 @app.teardown_appcontext
@@ -217,45 +297,60 @@ def close_connection(exception):
 
 @app.route("/")
 def home():
-    # Royal Highlanders logo in background
-    # Upcoming event
-    # Gallery Carousel
-    # About us (every member of MCUT hall club)
-    # Contacts in footer
-    return render_template("index.html")
+    gallery_imgs = Gallery.query(Gallery.img).all()
+    users = User.query()
+    execs = []
+    for user in users:
+        names = [role.name for role in user.roles]
+        if check_all_leadership_roles(names):
+            execs.append(user)
+    # return catalog.render("index", gallery_imgs=gallery_imgs, execs=execs)
 
 
 @app.route("/events")
 def events():
-    return render_template("events.html")
+    return catalog.render("events")
 
 
 @app.route("/events/<int:event_id>")
 def event(event_id):
-    return render_template("event.html", id=event_id)
+    return catalog.render("event", id=event_id)
+
+
+@app.route("/sharktank")
+def sharktank():
+    return catalog.render("sharktank")
 
 
 @app.route("/gallery")
 def gallery():
-    return render_template("gallery.html")
+    return catalog.render("gallery")
 
 
 @app.route("/election")
 def election():
-    # Candidates
-    return render_template("election.html")
+    return catalog.render("election")
 
 
-@app.route("/declare_candidacy")
-def election():
-    # Candidates
-    return render_template("election.html")
+@app.route("/declare_candidacy", methods=["GET", "POST"])
+def declare_candidacy():
+    return catalog.render("declare_candidacy")
+
+
+@app.route("/vote", methods=["GET", "POST"])
+def vote():
+    return catalog.render("vote")
 
 
 @app.route("/feedback")
 def feedback():
-    return render_template("feedback.html")
+    return catalog.render("feedback")
 
 
 if __name__ == "__main__":
+    try:
+        initialize_db()
+    except Exception as e:
+        print(e)
+        pass
     app.run(debug=True)

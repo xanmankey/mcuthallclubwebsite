@@ -1,0 +1,26 @@
+<footer class="fixed bottom-0 w-full bg-white dark:bg-gray-900 text-center mt-auto shadow p-4" id="footer">
+    <!-- <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700" /> -->
+    <!-- sm means small, md means medium lg means lg; the ui is sized differently for different screen sizes-->
+    <div class="flex flex-row justify-around items-center">
+    <div>
+        <h2 class="flex items-center">
+            <img src="{{ url_for('static', filename='assets/images/logo.ico') }}" class="h-8 me-3" alt="The Royal Highlanders Logo" />
+            <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">The Royal Highlanders</span>
+        </h2>
+    </div>
+    <div class="flex flex-col items-center sm:flex-row-reverse">
+        <div class="flex flex-row items-center sm:mt-0">
+            <a href="#" class="flex flex-col items-center justify-center text-gray-700 font-bold py-3 px-6">
+                <i class="fa-brands fa-instagram"></i>
+                Instagram
+            </a>
+            <a
+                href="https://www.twitch.tv/mccutcheonplays"
+                class="flex flex-col items-center justify-center text-gray-700 font-bold py-3 px-6"
+            >
+                <i class="fa-brands fa-twitch mb-1"></i>
+                Twitch
+            </a>
+            {{ content }}
+        </div>
+</footer>

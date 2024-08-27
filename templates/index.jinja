@@ -1,0 +1,43 @@
+{#def gallery_imgs, execs #}
+
+<Layout title="The Royal Highlanders">
+  <div class="flex flex-col justify-center items-center">
+    <div class="bg-cover bg-center bg-no-repeat h-screen flex flex-col justify-center items-center text-white" style="background-image: url('https://dummyimage.com/1920x1080/ddd/000');">
+      <div
+        class="h-screen flex flex-col justify-center items-center text-white"
+      >
+        <h1 class="text-6xl font-bold">The Royal Highlanders</h1>
+        <p class="text-lg">McCutcheon Hall Club</p>
+      </div>
+    </div>
+    <div
+      class="bg-gradient-to-r from-red-500 to-black flex justify-between items-center p-8"
+    >
+      <h2 class="text-3xl font-bold">Upcoming Events</h2>
+      <img
+        src="https://dummyimage.com/400x400/ddd/000"
+        alt="Upcoming Event"
+        class="w-1/4 h-auto"
+      />
+    </div>
+    <Carousel :imgs="{{ gallery_imgs }}"></Carousel>
+    <div
+      class="bg-gradient-to-r from-red-500 to-blue-500 flex justify-between items-center p-8"
+    >
+      <img
+        src="https://dummyimage.com/400x400/ddd/000"
+        alt="Shark Tank Event"
+        class="w-1/4 h-auto"
+      />
+      <h2 class="text-3xl font-bold">
+        Pitch your event at one of our Shark Tanks!
+      </h2>
+    </div>
+    <Grid>
+      {% for exec in execs %}
+        <ExecCard :exec="{{ exec }}"></ExecCard>
+      {% endfor %}
+    </Grid>
+  </div>
+</div>
+</Layout>

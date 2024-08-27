@@ -1,0 +1,10 @@
+{#def exec #}
+
+<div class="bg-white p-4 shadow-md flex flex-col" {{ attrs.render() }}>
+    <h2 class="text-center text-lg font-bold">
+    {{ exec.name }}
+    </h2>
+    <img src="{{ url_for('static', filename='uploads/images/' + exec.img) }}" class="w-64 h-64 object-cover" />
+    <h2 class="text-center text-lg font-bold">{% for role in exec.roles %}{{ role }}{% if not loop.last %}, {% endif %}{% endfor %}</h2>
+    <p class="text-center text-md">{{ exec.bio }}</p>
+</div>

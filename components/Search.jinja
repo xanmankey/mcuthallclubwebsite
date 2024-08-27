@@ -1,0 +1,9 @@
+{#def action, placeholder, target #}
+
+<input
+    class="border-2"
+    hx-get="{{ action }}"
+    hx-target="#{{ target }}"
+    placeholder="{{ placeholder }}"
+    {{ attrs.render() }}
+/>

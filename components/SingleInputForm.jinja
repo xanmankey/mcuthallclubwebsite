@@ -1,0 +1,16 @@
+{#def action, placeholder, input_name="" #}
+
+<form action="{{ action }}" method="post" {{ attrs.render() }}>
+    <input
+    class="outline text-center"
+    placeholder="{{ placeholder }}"
+    name="{{ input_name }}"
+    />
+    <button
+    id="submitter"
+    class="btn"
+    type="submit"
+    >
+    <i class="fa-solid fa-arrow-right"></i>
+    </button>
+</form>

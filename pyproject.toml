@@ -9,13 +9,15 @@ readme = "README.md"
 python = "^3.10"
 flask = "^3.0.3"
 flask-htmx = "^0.3.2"
-flask-sqlalchemy = "^3.1.1"
 jinja2-fragments = "^1.6.0"
-poetry-dotenv = "^0.4.0"
-sqlalchemy = "^2.0.32"
 wtforms = "^3.1.2"
 flask-admin = "^1.6.1"
 jinjax = "^0.45"
+active-alchemy = {git = "https://github.com/xanmankey/active-alchemy.git"}
+flask-login = "^0.6.3"
+flask-mail = "^0.10.0"
+sqlalchemy = "1.4.0"
+python-dotenv = "1.0.1"
 
 
 [build-system]

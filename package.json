@@ -1,0 +1,14 @@
+{
+  "name": "mcuthallclubwebsite",
+  "version": "1.0.0",
+  "description": "The Mcut Hall Club website",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "tailwindcss": "^3.4.10"
+  }
+}
