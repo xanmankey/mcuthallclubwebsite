@@ -559,6 +559,7 @@ def login():
             User.query().filter(User.email == email, User.password == password).first()
         )
         url = session.get("url")
+        print(url)
         if user is None:
             # User.create(email=email, password=password)
             # session["email"] = email
@@ -573,6 +574,9 @@ def login():
             )
             mail.send(msg)
             return redirect("/validate/{}".format(email))
+        else:
+            session["email"] = email
+            session["password"] = password
         if url is None:
             return redirect("/")
         return redirect(url)
@@ -601,7 +605,7 @@ def validate(email):
         return catalog.render("validate", email=email)
 
 
-@app.route("/error/<err>", methods=["GET"])
+@app.route("/error", methods=["GET"])
 def error(err):
     print(err)
     return catalog.render("error")
