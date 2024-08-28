@@ -1,0 +1,9 @@
+{#def events #}
+
+<Layout title="The Royal Highlanders">
+    <Grid>
+        {% for event in events %}
+            <EventCard :event="{{ event }}"></EventCard>
+        {% endfor %}
+    </Grid>
+</Layout>

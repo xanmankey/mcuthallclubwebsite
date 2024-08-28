@@ -12,13 +12,13 @@ class Gallery(db.Model):
     def __repr__(self):
         string = "<{}(".format(self.__class__.__name__)
         for field in self.__dict__:
-            string += f"{field}: {getattr(self, field.value)}, "
+            string += f"{field}: {getattr(self, field)}, "
         string = string[:-2] + ")>"
         return string
 
     def __str__(self):
         string = "<{}(".format(self.__class__.__name__)
         for field in self.__dict__:
-            string += f"{field}: {getattr(self, field.value)}, "
+            string += f"{field}: {getattr(self, field)}, "
         string = string[:-2] + ")>"
         return string

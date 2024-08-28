@@ -1,0 +1,11 @@
+{#def event #}
+
+<div class="bg-white p-4 shadow-md flex flex-col" {{ attrs.render() }}>
+    <h2 class="text-center text-lg font-bold">
+    {{ event.title }}
+    </h2>
+    <a href="/events/{{ event.id }}">
+        <img src="{{ url_for('static', filename='uploads/images/' + event.img) }}" class="w-64 h-64 object-cover" />
+    </a>
+    {{ content }}
+</div>

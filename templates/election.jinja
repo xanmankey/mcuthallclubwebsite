@@ -1,0 +1,24 @@
+{#def candidates,  user, votes #}
+
+<Layout title="The Royal Highlanders">
+    <div class="flex flex-col justify-center items-center">
+        {% set positions = ['president', 'vice_president', 'treasurer', 'secretary', 'grand_prix_rep', 'resident_satisfaction_committee_head', 'purchasing_committee_head', 'event_committee_head', 'hall_club_representation_committee_head'] %}
+        {% for position in positions %}
+            <Grid>
+                {% for candidate in candidates %}
+                    {% if candidate.running == position %}
+                        <CandidateCard :candidate="{{ candidate }}" :user="{{ user }}" :votes="{{ votes }}"></CandidateCard>
+                    {% endif %}
+                {% endfor %}
+            </Grid>
+        {% endfor %}
+    </div>
+    <form action="/election" method="post">
+        <button
+            class="fixed bottom-28 right-5 bg-red-500 text-white rounded-full p-8"
+            id="create_event_btn"
+        >
+            Run for a position!
+        </button>
+    </form>
+</Layout>

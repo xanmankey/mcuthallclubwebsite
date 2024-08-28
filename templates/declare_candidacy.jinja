@@ -1,0 +1,34 @@
+{#def positions #}
+{# In the game of chess, I always move my king first, because if the hall club president doesn't lead how does he expect the people to follow? #}
+<Layout title="The Royal Highlanders">
+    <LoginForm title="Run for a Hall Club Position!" input_one="purdue_email" placeholder_one="type your purdue email" input_two="password" url="declare_candidacy">
+        <div class="mb-6">
+            <label for="position" class="block text-sm font-medium text-gray-700">Position</label>
+            <select id="position" name="position" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                {% for position in positions %}
+                    <option value="{{ position.name }}">{{ position.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="mb-6">
+            <label for="full_name" class="block text-sm font-medium text-gray-700">Full Name</label>
+            <input type="text" id="full_name" name="full_name" maxlength="255" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Type your full name" required>
+        </div>
+
+        <div class="mb-6">
+            <label for="bio" class="block text-sm font-medium text-gray-700">Bio</label>
+            <input type="text" id="bio" name="bio" maxlength="100" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter your bio" required>
+        </div>
+        
+        <div class="mb-6">
+            <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
+            <input type="file" id="image" name="image" accept="image/*" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+        </div>
+        
+        <div class="mb-6">
+            <label for="platform" class="block text-sm font-medium text-gray-700">Platform</label>
+            <input type="text" id="platform" name="platform" maxlength="1000" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Why do you think you'd be a good hall club president?" required>
+        </div>
+    </LoginForm>
+</Layout>

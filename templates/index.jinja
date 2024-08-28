@@ -1,43 +1,52 @@
-{#def gallery_imgs, execs #}
+{#def event, gallery_imgs, execs #}
 
 <Layout title="The Royal Highlanders">
   <div class="flex flex-col justify-center items-center">
-    <div class="bg-cover bg-center bg-no-repeat h-screen flex flex-col justify-center items-center text-white" style="background-image: url('https://dummyimage.com/1920x1080/ddd/000');">
-      <div
-        class="h-screen flex flex-col justify-center items-center text-white"
-      >
-        <h1 class="text-6xl font-bold">The Royal Highlanders</h1>
-        <p class="text-lg">McCutcheon Hall Club</p>
-      </div>
+    <img
+      src="{{ url_for('static', filename='assets/images/logo.jpeg') }}"
+      alt="Event background"
+      class="w-screen h-screen object-cover opacity-50"
+    />
+    <div class="absolute top-[1/8] left-0 w-full h-[2/3] flex flex-col justify-center items-center text-white">
+      <h1 class="text-6xl font-bold text-black">The Royal Highlanders</h1>
+      <p class="text-lg text-black">McCutcheon Hall Club</p>
     </div>
+  </div>
+    {% if event %}
     <div
       class="bg-gradient-to-r from-red-500 to-black flex justify-between items-center p-8"
     >
-      <h2 class="text-3xl font-bold">Upcoming Events</h2>
-      <img
-        src="https://dummyimage.com/400x400/ddd/000"
-        alt="Upcoming Event"
-        class="w-1/4 h-auto"
-      />
+        <h2 class="text-3xl font-bold text-white">Upcoming Event: {{ event.title }}</h2>
+      <a href="/events/{{ event.id }}">
+        <img
+          src="{{ url_for('static', filename='uploads/images/' + event.img) }}"
+          alt="Upcoming Events"
+          class="w-96"
+        />
+      </a>
+      
     </div>
+    {% endif %}
     <Carousel :imgs="{{ gallery_imgs }}"></Carousel>
     <div
-      class="bg-gradient-to-r from-red-500 to-blue-500 flex justify-between items-center p-8"
+      class="bg-gradient-to-r from-blue-500 to-red-500 flex justify-between items-center p-8 text-white"
     >
-      <img
-        src="https://dummyimage.com/400x400/ddd/000"
-        alt="Shark Tank Event"
-        class="w-1/4 h-auto"
-      />
+      <a href="/sharktank">
+        <img
+          src="{{ url_for('static', filename='assets/images/sharktank.webp') }}"
+          alt="Shark Tank Event"
+          class="w-full h-auto"
+        />
+      </a>
       <h2 class="text-3xl font-bold">
-        Pitch your event at one of our Shark Tanks!
+        Pitch your event idea at our Event Shark Tanks!
       </h2>
     </div>
-    <Grid>
+    {# <Grid>
       {% for exec in execs %}
         <ExecCard :exec="{{ exec }}"></ExecCard>
       {% endfor %}
-    </Grid>
+    </Grid> #}
   </div>
 </div>
 </Layout>

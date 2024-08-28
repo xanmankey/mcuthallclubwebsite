@@ -9,7 +9,7 @@ from models.vote_user import VoteUser
 class User(db.Model, UserMixin):
     __tablename__ = "users"
 
-    full_name = db.Column(db.String(255), nullable=False, unique=True)
+    full_name = db.Column(db.String(255), nullable=True, unique=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     img = db.Column(db.String(255), nullable=True)
@@ -23,14 +23,14 @@ class User(db.Model, UserMixin):
     roles = db.relationship(
         "Role", secondary=RoleUser.__tablename__, back_populates="users"
     )
-    running = db.Column(db.ForeignKey("roles.id"), nullable=True)
-    votes = db.relationship(
-        "Vote", secondary=VoteUser.__tablename__, back_populates="users"
-    )
+    running = db.Column(db.ForeignKey("roles.name"), nullable=True)
+    # votes = db.relationship(
+    #     "Vote", secondary=VoteUser.__tablename__, back_populates="voter_id"
+    # )
 
     @validates("email")
-    def validate_email(self, email):
-        if not email.contains("@purdue.edu"):
+    def validate_email(self, key, email):
+        if not "@purdue.edu" in email:
             raise ValueError("You must use your purdue email address.")
         else:
             return email
@@ -54,13 +54,13 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         string = "<{}(".format(self.__class__.__name__)
         for field in self.__dict__:
-            string += f"{field}: {getattr(self, field.value)}, "
+            string += f"{field}: {getattr(self, field)}, "
         string = string[:-2] + ")>"
         return string
 
     def __str__(self):
         string = "<{}(".format(self.__class__.__name__)
         for field in self.__dict__:
-            string += f"{field}: {getattr(self, field.value)}, "
+            string += f"{field}: {getattr(self, field)}, "
         string = string[:-2] + ")>"
         return string

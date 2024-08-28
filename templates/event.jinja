@@ -1,0 +1,12 @@
+{#def event, time #}
+
+<Layout title="The Royal Highlanders">
+    <div class="h-screen flex flex-col justify-center items-center">
+        <img src="{{ url_for('static', filename='uploads/images/' + event.img) }}" alt="Event Image" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 flex flex-col justify-center items-center">
+            <h1 class="text-black text-6xl font-bold text-center mb-4">{{ event.title }}</h1>
+            <h1 class="text-black text-4xl font-bold text-center mb-4">{{ time }}</h1>
+            <p class="text-black text-lg text-center">{{ event.description }}</p>
+        </div>
+    </div>
+</Layout>

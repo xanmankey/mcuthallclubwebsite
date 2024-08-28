@@ -6,20 +6,21 @@ class Event(db.Model):
 
     title = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False)
-    date_time = db.Column(db.DateTime, nullable=True)
-    completed = db.Column(db.Boolean, nullable=False)
+    start_time = db.Column(db.DateTime, nullable=True)
+    end_time = db.Column(db.DateTime, nullable=True)
+    completed = db.Column(db.Boolean, nullable=False, default=False)
     img = db.Column(db.String, nullable=False)
 
     def __repr__(self):
         string = "<{}(".format(self.__class__.__name__)
         for field in self.__dict__:
-            string += f"{field}: {getattr(self, field.value)}, "
+            string += f"{field}: {getattr(self, field)}, "
         string = string[:-2] + ")>"
         return string
 
     def __str__(self):
         string = "<{}(".format(self.__class__.__name__)
         for field in self.__dict__:
-            string += f"{field}: {getattr(self, field.value)}, "
+            string += f"{field}: {getattr(self, field)}, "
         string = string[:-2] + ")>"
         return string

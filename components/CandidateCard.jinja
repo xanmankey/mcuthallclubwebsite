@@ -1,0 +1,29 @@
+{#def candidate, user, votes #}
+
+{% if candidate.id in votes %}
+<div class="bg-white p-4 outline-2 shadow-md flex flex-col opacity-100" {{ attrs.render() }}>
+    <h2 class="text-center text-lg font-bold">
+        {{ candidate.full_name }}
+    </h2>
+    <a href="/candidate/{{ candidate.id }}">
+            <img src="{{ url_for('static', filename='uploads/images/' + candidate.img) }}" class="w-64 h-64 object-cover" id="img_{{ candidate.full_name }}"/>        
+        </a>
+    <p class="text-center text-wrap text-md overflow-hidden">{{ candidate.running }}</p>
+</div>
+{% else %}
+<form action="/vote/{{ candidate.id }}/{{ user.id }}" method="post" id="vote_{{ candidate.full_name }}">
+    <div class="bg-white p-4 shadow-md flex flex-col opacity-30 hover:opacity-100 z-10 cursor-pointer"
+         {{ attrs.render() }}>
+        <h2 class="text-center text-lg font-bold">
+            {{ candidate.full_name }}
+        </h2>
+        <a href="/candidate/{{ candidate.id }}">
+            <img src="{{ url_for('static', filename='uploads/images/' + candidate.img) }}" class="w-64 h-64 object-cover" id="img_{{ candidate.full_name }}"/>        
+        </a>
+        <p class="text-center text-wrap text-md overflow-hidden">{{ candidate.running }}</p>
+        <div class="flex justify-center items-center p-1 z-10" onclick="document.getElementById('vote_{{ candidate.full_name }}').submit();">
+            <img src="{{ url_for('static', filename='assets/images/vote.png') }}" class="w-16 h-16 object-cover" />
+        </div>
+    </div>
+</form>
+{% endif %}
