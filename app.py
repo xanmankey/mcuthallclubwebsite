@@ -25,6 +25,7 @@ from dotenv import load_dotenv
 import random
 from db import DATABASE_URL, db
 from jinjax import Catalog
+from flask_mail import Mail, Message
 
 # if not load_dotenv(os.path.join(os.getcwd(), ".env")):
 #     print("No .env file found")
@@ -36,6 +37,19 @@ htmx = HTMX(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+MAIL_SERVER = "smtp.gmail.com"
+MAIL_PORT = 465
+MAIL_USE_SSL = True
+MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+app.config["MAIL_SERVER"] = MAIL_SERVER
+app.config["MAIL_PORT"] = MAIL_PORT
+# app.config["MAIL_USE_TLS"] = True
+app.config["MAIL_USE_SSL"] = True
+app.config["MAIL_USERNAME"] = MAIL_USERNAME
+app.config["MAIL_PASSWORD"] = MAIL_PASSWORD
+app.config["MAIL_DEFAULT_SENDER"] = MAIL_USERNAME
+mail = Mail(app)
 COMPONENTS_DIR = "components"
 TEMPLATES_DIR = "templates"
 STATIC_DIR = "static"
@@ -546,14 +560,66 @@ def login():
         )
         url = session.get("url")
         if user is None:
-            User.create(email=email, password=password)
-            session["email"] = email
+            # User.create(email=email, password=password)
+            # session["email"] = email
             session["password"] = password
+            # Send a verification email
+            code = random.randint(100000, 999999)
+            session["code"] = str(code)
+            msg = Message(
+                "Verify your email",
+                recipients=[email],
+                body=f"Your verification code is {code}",
+            )
+            mail.send(msg)
+            return redirect("/validate/{}".format(email))
         if url is None:
             return redirect("/")
         return redirect(url)
     else:
         return catalog.render("login")
+
+
+@app.route("/validate/<email>", methods=["GET", "POST"])
+def validate(email):
+    if request.method == "POST":
+        code = request.form.get("code")
+        if code is None:
+            return redirect(url_for("error"))
+        elif code != session.get("code"):
+            return redirect(url_for("error"))
+        password = session.get("password")
+        if password is None:
+            return redirect(url_for("error"))
+        User.create(email=email, password=password)
+        session["email"] = email
+        url = session.get("url")
+        if url is None:
+            return redirect("/")
+        return redirect(url)
+    else:
+        return catalog.render("validate", email=email)
+
+
+@app.route("/error/<err>", methods=["GET"])
+def error(err):
+    print(err)
+    return catalog.render("error")
+
+
+@app.errorhandler(Exception)
+def handle_foo_exception(error):
+    # response = jsonify(error.to_dict())
+    # response.status_code = error.status_code
+    # return response
+    return redirect(url_for("error"))
+
+
+@app.route("/logout", methods=["GET"])
+def logout():
+    session.pop("email", None)
+    session.pop("password", None)
+    return redirect("/")
 
 
 @app.route("/constitution")

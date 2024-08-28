@@ -1,6 +1,6 @@
-{#def action, placeholder, input_name="" #}
+{#def action, action_two, placeholder, input_name="" #}
 
-<form action="{{ action }}" method="post" {{ attrs.render() }}>
+<form action="{{ action }}/{{ action_two }}" method="post" {{ attrs.render() }}>
     <input
     class="outline text-center"
     placeholder="{{ placeholder }}"
