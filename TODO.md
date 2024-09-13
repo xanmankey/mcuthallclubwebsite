@@ -1,4 +1,4 @@
 # Todo
 
-- [] Jinjax components
-- []
+- [] Implement committee form/backend for it
+- [] Push update

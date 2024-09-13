@@ -1,0 +1,29 @@
+{#def positions, email="Type your purdue email", full_name="Type your full name", bio="Type your bio", platform="What makes you a good committee head?" #}
+
+<Layout title="The Royal Highlanders">
+    <LoginForm title="Apply to be a committee head!" input_one="email" placeholder_one="{{ email }}" input_two="full_name" placeholder_two="{{ full_name }}" url="committee_head_application">
+        <div class="mb-6">
+            <label for="position" class="block text-sm font-medium text-gray-700">Position</label>
+            <select id="position" name="position" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+            {% for position in positions %}
+                <option value="{{ position }}">{{ position }}</option>
+            {% endfor %}
+            </select>
+        </div>
+        
+        <div class="mb-6">
+            <label for="bio" class="block text-sm font-medium text-gray-700">Bio</label>
+            <textarea type="text" id="bio" name="bio" maxlength="100" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="{{ bio }}" required></textarea>
+        </div>
+        
+        <div class="mb-6">
+            <label for="platform" class="block text-sm font-medium text-gray-700">Platform</label>
+            <textarea type="text" id="platform" name="platform" maxlength="1000" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="{{ platform }}" required></textarea>
+        </div>
+
+        {# <div class="mb-6"></div>
+            <label for="resume" class="block text-sm font-medium text-gray-700">Resume</label>
+            <input type="file" id="resume" name="resume" accept="image/*,.pdf" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+        </div> #}
+    </LoginForm>
+</Layout>

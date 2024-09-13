@@ -24,6 +24,7 @@ class User(db.Model, UserMixin):
         "Role", secondary=RoleUser.__tablename__, back_populates="users"
     )
     running = db.Column(db.ForeignKey("roles.name"), nullable=True)
+    resume = db.Column(db.String(255), nullable=True)
     # votes = db.relationship(
     #     "Vote", secondary=VoteUser.__tablename__, back_populates="voter_id"
     # )

@@ -1,7 +1,7 @@
 {#def title, button_text="Login", input_one="email", input_two="password", type_one="text", type_two="password", url='admin_login' #}
 
-<div class="flex justify-center items-center h-screen bg-gray-100" {{ attrs.render() }}>
-    <div class="bg-white p-8 rounded shadow-md w-80">
+<div class="flex flex-col justify-center items-center h-screen bg-gray-100" {{ attrs.render() }}>
+    <div class="bg-white p-8 rounded shadow-md w-2/3">
         <h2 class="text-2xl font-bold mb-6 text-center">{{ title }}</h2>
         <form action="{{ url_for(url) }}" method="post" enctype="multipart/form-data">
             <div class="mb-4">
@@ -12,8 +12,9 @@
                 <label for="{{ input_two }}" class="block text-sm font-medium text-gray-700">{{ input_two }}</label>
                 <input type="{{ type_two }}" id="{{ input_two }}" name="{{ input_two }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter your {{ input_two }}">
             </div>
-            {{ content}}
-            <button type="submit" class="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">{{ button_text }}</button>
+            {{ content }}
+            <div class="mb-6"></div>
+            <button type="submit" class="w-auto bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">{{ button_text }}</button>
         </form>
     </div>
 </div>

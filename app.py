@@ -350,7 +350,19 @@ class UserView(ModelView):
 
     @property
     def column_list(self):
-        return ["id"] + self.scaffold_list_columns()
+        return ["id"] + ["running"] + self.scaffold_list_columns()
+
+    form_extra_fields = {
+        "img": FileUploadField(
+            "Image",
+            base_path=os.path.join(STATIC_DIR, "uploads", "images"),
+            allowed_extensions=["png", "jpg", "jpeg", "webp"],
+        ),
+        "running": Select2Field(
+            "Running",
+            choices=[(role.name, role.name) for role in Role.query().all()],
+        ),
+    }
 
 
 class VoteView(ModelView):
@@ -373,7 +385,7 @@ class VoteView(ModelView):
 
     @property
     def column_list(self):
-        return ["id"] + self.scaffold_list_columns()
+        return ["id", "candidate_id", "position"] + self.scaffold_list_columns()
 
 
 with app.app_context():
@@ -484,70 +496,113 @@ def gallery():
     return catalog.render("gallery")
 
 
-@app.route("/election", methods=["GET", "POST"])
-def election():
+# @app.route("/election", methods=["GET", "POST"])
+# def election():
+#     if request.method == "GET":
+#         email = session.get("email")
+#         if email is None:
+#             session["url"] = url_for("election")
+#             return redirect("/login")
+#         candidates = (
+#             User.query()
+#             .join(Role)
+#             .filter(User.running != None)
+#             .order_by(User.running.name)
+#             .all()
+#         )
+#         user = User.query().filter(User.email == email).first()
+#         votes = Vote.query(Vote.candidate_id).filter(Vote.voter_id == user.id).all()
+#         votes = [vote[0] for vote in votes]
+#         return catalog.render("election", candidates=candidates, user=user, votes=votes)
+#     elif request.method == "POST":
+#         return redirect(url_for("declare_candidacy"))
+
+
+@app.route("/committees", methods=["GET"])
+def committees():
+    # Displays committee info
+    return catalog.render("committees")
+
+
+@app.route("/committee_head_application", methods=["GET", "POST"])
+def committee_head_application():
+    # Render committee sign up form
     if request.method == "GET":
+        # Determine if user is signed in
         email = session.get("email")
-        if email is None:
-            session["url"] = url_for("election")
-            return redirect("/login")
-        candidates = (
-            User.query()
-            .join(Role)
-            .filter(User.running != None)
-            .order_by(User.running.name)
-            .all()
+        positions = (
+            Role.query(Role.name).filter(Role.name.contains("committee_head")).all()
         )
-        user = User.query().filter(User.email == email).first()
-        votes = Vote.query(Vote.candidate_id).filter(Vote.voter_id == user.id).all()
-        votes = [vote[0] for vote in votes]
-        return catalog.render("election", candidates=candidates, user=user, votes=votes)
-    elif request.method == "POST":
-        return redirect(url_for("declare_candidacy"))
-
-
-@app.route("/declare_candidacy", methods=["GET", "POST"])
-def declare_candidacy():
-    if request.method == "GET":
-        positions = Role.query().filter(Role.is_electable == True).all()
-        return catalog.render("declare_candidacy", positions=positions)
-    elif request.method == "POST":
-        full_name = request.form["full_name"]
-        email = request.form["purdue_email"]
-        password = request.form["password"]
-        bio = request.form["bio"]
-        img = request.files["image"]
-        img.save(os.path.join(STATIC_DIR, "uploads", "images", img.filename))
-        running = request.form["position"]
-        platform = request.form["platform"]
-        user = User.query().filter(User.email == email).first()
-        if not user:
-            user = User.create(
-                full_name=full_name,
-                email=email,
-                password=password,
-                img=img.filename,
-                bio=bio,
-                running=running,
-                platform=platform,
-            )
+        positions = [position[0] for position in positions]
+        if email is None:
+            return catalog.render("committee_head_application", positions=positions)
         else:
-            if "ra" in [role.name for role in user.roles]:
-                return redirect(url_for("/"))
-            user.full_name = full_name
-            user.password = password
-            user.img = img.filename
-            user.bio = bio
-            user.running = running
-            user.platform = platform
-            user.save()
-        return redirect("/election")
+            user = User.query().filter(User.email == email).first()
+            return catalog.render(
+                "committee_head_application", user=user, positions=positions
+            )
+    else:
+        # Form submission
+        email = request.form["email"]
+        user = User.query().filter(User.email == email).first()
+        if user is None:
+            return redirect(url_for("login"))
+        else:
+            # If user already exists
+            full_name = request.form["full_name"]
+            bio = request.form["bio"]
+            platform = request.form["platform"]
+            running = request.form["position"]
+            user.update(
+                full_name=full_name, bio=bio, platform=platform, running=running
+            )
+        return redirect(
+            url_for("success", msg="Committee application submitted successfully")
+        )
 
 
-@app.route("/candidate/<int:candidate_id>", methods=["GET"])
-def candidate(candidate_id):
-    candidate = User.query().filter(User.id == candidate_id).first()
-    return catalog.render("candidate", candidate=candidate)
+# @app.route("/declare_candidacy", methods=["GET", "POST"])
+# def declare_candidacy():
+#     if request.method == "GET":
+#         positions = Role.query().filter(Role.is_electable == True).all()
+#         return catalog.render("declare_candidacy", positions=positions)
+#     elif request.method == "POST":
+#         full_name = request.form["full_name"]
+#         email = request.form["purdue_email"]
+#         password = request.form["password"]
+#         bio = request.form["bio"]
+#         img = request.files["image"]
+#         img.save(os.path.join(STATIC_DIR, "uploads", "images", img.filename))
+#         running = request.form["position"]
+#         platform = request.form["platform"]
+#         user = User.query().filter(User.email == email).first()
+#         if not user:
+#             user = User.create(
+#                 full_name=full_name,
+#                 email=email,
+#                 password=password,
+#                 img=img.filename,
+#                 bio=bio,
+#                 running=running,
+#                 platform=platform,
+#             )
+#         else:
+#             if "ra" in [role.name for role in user.roles]:
+#                 return redirect(url_for("/"))
+#             user.full_name = full_name
+#             user.password = password
+#             user.img = img.filename
+#             user.bio = bio
+#             user.running = running
+#             user.platform = platform
+#             user.save()
+#         return redirect("/election")
+
+
+# @app.route("/candidate/<int:candidate_id>", methods=["GET"])
+# def candidate(candidate_id):
+#     candidate = User.query().filter(User.id == candidate_id).first()
+#     return catalog.render("candidate", candidate=candidate)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -589,12 +644,12 @@ def validate(email):
     if request.method == "POST":
         code = request.form.get("code")
         if code is None:
-            return redirect(url_for("error"))
+            return redirect(url_for("error"), "Empty email code")
         elif code != session.get("code"):
-            return redirect(url_for("error"))
+            return redirect(url_for("error"), "Invalid email code")
         password = session.get("password")
         if password is None:
-            return redirect(url_for("error"))
+            return redirect(url_for("error"), "Empty password")
         User.create(email=email, password=password)
         session["email"] = email
         url = session.get("url")
@@ -605,18 +660,24 @@ def validate(email):
         return catalog.render("validate", email=email)
 
 
-@app.route("/error", methods=["GET"])
+@app.route("/error/<err>", methods=["GET"])
 def error(err):
     print(err)
     return catalog.render("error")
 
 
-@app.errorhandler(Exception)
-def handle_foo_exception(error):
-    # response = jsonify(error.to_dict())
-    # response.status_code = error.status_code
-    # return response
-    return redirect(url_for("error"))
+@app.route("/success/<msg>", methods=["GET"])
+def success(msg):
+    print(msg)
+    return catalog.render("success", msg=msg)
+
+
+# @app.errorhandler(Exception)
+# def handle_foo_exception(error):
+#     # response = jsonify(error.to_dict())
+#     # response.status_code = error.status_code
+#     # return response
+#     return redirect(url_for("error"))
 
 
 @app.route("/logout", methods=["GET"])
@@ -631,22 +692,22 @@ def constitution():
     return catalog.render("constitution")
 
 
-@app.route("/vote/<int:candidate_id>/<int:voter_id>", methods=["POST"])
-def vote(candidate_id, voter_id):
-    candidate = User.query().filter(User.id == candidate_id).first()
-    user = User.query().filter(User.id == voter_id).first()
-    votes = Vote.query().filter(Vote.voter_id == voter_id)
-    # Check if the user has already for a candidate with the position
-    for vote in votes:
-        if vote.position == candidate.running:
-            vote.update(candidate_id=candidate.id)
-            # user.votes.append(vote)
-            return redirect(url_for("election"))
-    vote = Vote.create(
-        candidate_id=candidate.id, position=candidate.running, voter_id=user.id
-    )
-    # user.votes.append(vote)
-    return redirect(url_for("election"))
+# @app.route("/vote/<int:candidate_id>/<int:voter_id>", methods=["POST"])
+# def vote(candidate_id, voter_id):
+#     candidate = User.query().filter(User.id == candidate_id).first()
+#     user = User.query().filter(User.id == voter_id).first()
+#     votes = Vote.query().filter(Vote.voter_id == voter_id)
+#     # Check if the user has already for a candidate with the position
+#     for vote in votes:
+#         if vote.position == candidate.running:
+#             vote.update(candidate_id=candidate.id)
+#             # user.votes.append(vote)
+#             return redirect(url_for("election"))
+#     vote = Vote.create(
+#         candidate_id=candidate.id, position=candidate.running, voter_id=user.id
+#     )
+#     # user.votes.append(vote)
+#     return redirect(url_for("election"))
 
 
 @app.route("/feedback")
